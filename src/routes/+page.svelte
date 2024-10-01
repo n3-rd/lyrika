@@ -1,9 +1,16 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 import { initiateSpotifyAuth, isSpotifyAuthenticated } from '$lib/spotifyAuth';
 // import { initiateAppleMusicAuth } from '$lib/appleMusicAuth';
 // 
 function handleSpotifyAuth() {
     initiateSpotifyAuth();
+}
+
+if (isSpotifyAuthenticated()) {
+    goto('/app');
+} else {
+    console.log('Spotify is not authenticated');
 }
 
 // async function handleAppleMusicAuth() {
