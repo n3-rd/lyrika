@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount, onDestroy, afterUpdate } from 'svelte';
+    import { onMount, onDestroy, afterUpdate, tick } from 'svelte';
     import { goto } from '$app/navigation';
     import { isSpotifyAuthenticated, getCurrentlyPlayingTrack } from '$lib/spotifyAuth';
     import { syncedLyrics, plainLyrics, currentLine, parseSyncedLyrics, fetchLyrics, saveLyricsToLocalStorage, getLyricsFromLocalStorage } from '$lib/lyrics';
@@ -14,6 +14,9 @@
     let scrollContainer: HTMLElement | null = null;
     let userInteracting = false;
     let lastInteractionTime = 0;
+    let lastFetchTime = 0;
+    let predictedTime = 0;
+    let predictiveInterval: number;
 
     let accentColor = "#000000"
     let textColor = "#ffffff"
@@ -50,7 +53,13 @@
         if (newTrack) {
             const elapsedSinceLastFetch = Date.now() - newTrack.fetchedAt;
             currentTime = newTrack.progress_ms + elapsedSinceLastFetch;
-            updateCurrentLyricLine();
+            lastFetchTime = Date.now();
+            predictedTime = currentTime;
+            updateCurrentLyricLine(currentTime);
+            
+            // Restart the predictive timer
+            stopPredictiveTimer();
+            startPredictiveTimer();
         }
     }
 
@@ -87,10 +96,10 @@
         }
     }
 
-    function updateCurrentLyricLine() {
+    function updateCurrentLyricLine(time: number) {
         const currentLyric = parsedLyrics.find((lyric, index) => 
-            currentTime >= lyric.time * 1000 && 
-            (index === parsedLyrics.length - 1 || currentTime < parsedLyrics[index + 1].time * 1000)
+            time >= lyric.time * 1000 && 
+            (index === parsedLyrics.length - 1 || time < parsedLyrics[index + 1].time * 1000)
         );
         if (currentLyric) {
             currentLine.set(currentLyric);
@@ -117,6 +126,21 @@
         }, 5000);
     }
 
+    function startPredictiveTimer() {
+        predictiveInterval = setInterval(() => {
+            const now = Date.now();
+            const elapsed = now - lastFetchTime;
+            predictedTime = currentTime + elapsed;
+            updateCurrentLyricLine(predictedTime);
+        }, 100); // Update every 100ms for smoother prediction
+    }
+
+    function stopPredictiveTimer() {
+        if (predictiveInterval) {
+            clearInterval(predictiveInterval);
+        }
+    }
+
     onMount(async () => {
         if (!isSpotifyAuthenticated()) {
             goto('/');
@@ -125,6 +149,7 @@
             intervalId = setInterval(async () => {
                 await updateCurrentTrack();
             }, 1000);
+            startPredictiveTimer();
         }
     });
 
@@ -132,6 +157,7 @@
         if (intervalId) {
             clearInterval(intervalId);
         }
+        stopPredictiveTimer();
     });
 
     afterUpdate(() => {
