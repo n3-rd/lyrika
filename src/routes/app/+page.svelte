@@ -25,6 +25,7 @@
     let coverImage = ""
 
     let displayMode: 'multiline' | 'singleline' = 'multiline';
+    let userHoverOnLyrics = false;
 
     $:{
         coverImage = currentTrack?.item?.album?.images[0]?.url
@@ -77,6 +78,8 @@
         return (yiq >= 128) ? '#000000' : '#ffffff';
     }
 
+    
+
     async function updateLyrics(artist: string, title: string) {
         let lyrics = getLyricsFromLocalStorage(artist, title);
         if (!lyrics) {
@@ -106,7 +109,7 @@
     }
 
     function scrollToCurrentLine() {
-        if (scrollContainer) {
+        if (scrollContainer && !userHoverOnLyrics) {
             const currentLineElement = document.querySelector('.current-line');
             if (currentLineElement) {
                 currentLineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -120,6 +123,15 @@
         setTimeout(() => {
             userInteracting = false;
         }, 5000);
+    }
+
+    function handleMouseEnter() {
+        userHoverOnLyrics = true;
+        handleUserInteraction();
+    }
+
+    function handleMouseLeave() {
+        userHoverOnLyrics = false;
     }
 
     function startPredictiveTimer() {
@@ -169,20 +181,19 @@
 
 <div class="h-screen w-screen relative bg-opacity-50 bg-gray-800" style="background-color: {accentColor}; color: {textColor};">
    <Miniplayer 
-  currentTrack={currentTrack} 
-  currentTime={currentTime}
-  displayMode={displayMode}
+        currentTrack={currentTrack} 
+        currentTime={currentTime}
+        displayMode={displayMode}
         on:toggle-display-mode={(event) => toggleDisplayMode(event.detail)}
     />
     <div class="flex flex-col items-center justify-center h-full">
         {#if currentTrack && $syncedLyrics}
-        
-
             {#if displayMode === 'multiline'}
                 <ScrollArea 
                     class="h-full w-full mt-16 px-10 !font-sans transition-all duration-300" 
                     bind:this={scrollContainer}
-                    on:mouseenter={handleUserInteraction}
+                    on:mouseenter={handleMouseEnter}
+                    on:mouseleave={handleMouseLeave}
                     on:touchstart={handleUserInteraction}
                     on:wheel={handleUserInteraction}
                 >

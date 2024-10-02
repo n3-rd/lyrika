@@ -47,7 +47,7 @@
         </div>
         <div class="flex items-center justify-center flex-1">
             <button 
-                class="p-2 rounded-full hover:bg-gray-700 transition-colors duration-200"
+                class="p-2 rounded-full hover:bg-white/10 transition-colors duration-200"
                 on:click={toggleDisplayMode}
                 aria-label={displayMode === 'singleline' ? 'Expand player' : 'Collapse player'}
             >
