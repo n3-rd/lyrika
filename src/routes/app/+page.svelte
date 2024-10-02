@@ -12,7 +12,7 @@
     let currentTime: number = 0;
     let intervalId: number;
     let parsedLyrics: ReturnType<typeof parseSyncedLyrics> = [];
-    let scrollContainer: HTMLElement | null = null;
+    let scrollContainer: ScrollArea | null = null;
     let userInteracting = false;
     let lastInteractionTime = 0;
     let lastFetchTime = 0;
@@ -63,8 +63,8 @@
     async function updateAccentColor(imageUrl: string) {
         try {
             const color = await prominent(imageUrl, { amount: 1, format: 'hex' });
-            accentColor = color;
-            textColor = getContrastColor(color)
+            accentColor = color as string;
+            textColor = getContrastColor(color as string)
         } catch (error) {
             console.error('Failed to get accent color:', error);
         }
@@ -196,6 +196,7 @@
                     on:mouseleave={handleMouseLeave}
                     on:touchstart={handleUserInteraction}
                     on:wheel={handleUserInteraction}
+                    on:scroll={handleUserInteraction}
                 >
                     {#each parsedLyrics as lyric, i}
                         <p class={`text-center my-12 text-4xl font-clashDisplayMedium transition-opacity duration-300 ${lyric === $currentLine ? 'font-semibold current-line opacity-100' : 'opacity-50'}`}>

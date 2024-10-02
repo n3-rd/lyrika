@@ -2,13 +2,15 @@
     import { createEventDispatcher } from 'svelte';
     import { ChevronUp, ChevronDown } from 'lucide-svelte';
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        'toggle-display-mode': 'singleline' | 'multiline';
+    }>();
 
     interface Artist {
         name: string;
     }
 
-    interface Track {
+    interface CurrentTrack {
         item: {
             name: string;
             artists: Artist[];
@@ -19,9 +21,9 @@
         };
     }
 
-    export let currentTrack: Track | null;
+    export let currentTrack: CurrentTrack | null;
     export let currentTime: number;
-    export let displayMode;
+    export let displayMode: 'singleline' | 'multiline';
 
     function formatTime(ms: number): string {
         const seconds = Math.floor(ms / 1000);
@@ -52,14 +54,16 @@
                 aria-label={displayMode === 'singleline' ? 'Expand player' : 'Collapse player'}
             >
                 {#if displayMode === 'singleline'}
-                    <ChevronDown size={24} />
+                    <ChevronDown size={24} aria-hidden="true" />
                 {:else}
-                    <ChevronUp size={24} />
+                    <ChevronUp size={24} aria-hidden="true" />
                 {/if}
             </button>
         </div>
         <div class="flex items-center justify-end flex-1">
-            {formatTime(currentTime)} / {formatTime(currentTrack.item.duration_ms)}
+            <span aria-live="polite" aria-atomic="true">
+                {formatTime(currentTime)} / {formatTime(currentTrack.item.duration_ms)}
+            </span>
         </div>
     {:else}
         <p>No track currently playing</p>
