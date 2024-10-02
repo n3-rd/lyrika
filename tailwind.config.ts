@@ -55,7 +55,12 @@ const config: Config = {
 				sm: "calc(var(--radius) - 4px)"
 			},
 			fontFamily: {
-				sans: [...fontFamily.sans]
+				sans: [...fontFamily.sans],
+				clash: ['clash-regular', ...fontFamily.sans],
+				clashBold: ['clash-bold', ...fontFamily.sans],
+				clashMedium: ['clash-medium', ...fontFamily.sans],
+				clashSemibold: ['clash-semibold', ...fontFamily.sans],
+				clashLight: ['clash-light', ...fontFamily.sans]
 			}
 		}
 	},

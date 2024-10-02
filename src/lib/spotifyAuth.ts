@@ -1,5 +1,6 @@
 import { PUBLIC_SPOTIFY_CLIENT_ID } from '$env/static/public';
 import { browser } from '$app/environment';
+import { goto } from '$app/navigation';
 
 const SPOTIFY_AUTH_ENDPOINT = 'https://accounts.spotify.com/authorize';
 const SPOTIFY_REDIRECT_URI = 'http://localhost:5173/callback'; // This should match your actual development server URL
@@ -24,7 +25,7 @@ export function handleSpotifyCallback() {
 
     if (accessToken) {
         console.log('Spotify access token:', accessToken);
-        setSpotifyCookie(accessToken);
+        setSpotifyToken(accessToken);
         return accessToken;
     } else {
         console.error('No access token found in the URL');
@@ -33,30 +34,66 @@ export function handleSpotifyCallback() {
 }
 
 export function isSpotifyAuthenticated() {
-    return !!getSpotifyCookie();
+    return !!getSpotifyToken();
 }
 
-function setSpotifyCookie(token: string) {
+function setSpotifyToken(token: string) {
     if (browser) {
-        document.cookie = `spotifyAccessToken=${token}; path=/; max-age=3600; SameSite=Strict; Secure`;
+        localStorage.setItem('spotifyAccessToken', token);
     }
 }
 
-function getSpotifyCookie(): string | null {
+function getSpotifyToken(): string | null {
     if (browser) {
-        const cookies = document.cookie.split(';');
-        for (let cookie of cookies) {
-            const [name, value] = cookie.trim().split('=');
-            if (name === 'spotifyAccessToken') {
-                return value;
-            }
-        }
+        return localStorage.getItem('spotifyAccessToken');
     }
     return null;
 }
 
-export function clearSpotifyCookie() {
+export function clearSpotifyToken() {
     if (browser) {
-        document.cookie = 'spotifyAccessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict; Secure';
+        localStorage.removeItem('spotifyAccessToken');
+    }
+}
+
+// ... existing code ...
+
+export async function getCurrentlyPlayingTrack() {
+    const token = getSpotifyToken();
+    if (!token) {
+        console.error('No Spotify token found');
+        return null;
+    }
+
+    try {
+        const response = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.status === 204) {
+            return null; // No track currently playing
+        }
+
+        if (response.status === 401) {
+            // Token expired, clear it and redirect to login
+            clearSpotifyToken();
+            goto('/');
+            return null;
+        }
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch currently playing track');
+        }
+
+        const data = await response.json();
+        return {
+            ...data,
+            fetchedAt: Date.now() // Add timestamp when the data was fetched
+        };
+    } catch (error) {
+        console.error('Error fetching currently playing track:', error);
+        return null;
     }
 }

@@ -7,7 +7,7 @@ onMount(() => {
     const accessToken = handleSpotifyCallback();
     if (accessToken) {
         // Successfully authenticated
-        // The token is now stored in a cookie, no need to use localStorage
+        // The token is now stored in localStorage
         goto('/');
     } else {
         // Authentication failed

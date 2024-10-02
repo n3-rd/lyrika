@@ -67,12 +67,35 @@
     --ring: 212.7 26.8% 83.9%;
   }
 }
+
+@font-face {
+  font-family: 'clash-light';
+  src: url('/fonts/ClashDisplay-Light.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'clash-regular';
+  src: url('/fonts/ClashDisplay-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'clash-bold';
+  src: url('/fonts/ClashDisplay-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'clash-medium';
+  src: url('/fonts/ClashDisplay-Medium.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'clash-semibold';
+  src: url('/fonts/ClashDisplay-Semibold.ttf') format('truetype');
+}
+
  
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border font-clashMedium;
+    /* font-family: "clash-regular"; */
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-clashMedium;
   }
 }
