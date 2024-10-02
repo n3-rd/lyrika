@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "ohun",
+  "productName": "lyrika",
   "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "identifier": "com.n3rd.lyrika",
   "build": {
     "frontendDist": "../build",
     "devUrl": "http://localhost:5173",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "ohun",
+        "title": "lyrika",
         "width": 800,
         "height": 600,
         "resizable": true,
