@@ -6,6 +6,7 @@
     import { ScrollArea } from '$lib/components/ui/scroll-area';
     import { prominent } from 'color.js';
     import { writable } from 'svelte/store';
+    import Miniplayer from '$lib/components/ui/scroll-area/miniplayer.svelte';
 
     let currentTrack: any = null;
     let currentTime: number = 0;
@@ -23,6 +24,8 @@
 
     let coverImage = ""
 
+    let displayMode: 'multiline' | 'singleline' = 'multiline';
+
     $:{
         coverImage = currentTrack?.item?.album?.images[0]?.url
         updateAccentColor(coverImage)
@@ -30,13 +33,6 @@
 
     $: if ($syncedLyrics) {
         parsedLyrics = parseSyncedLyrics($syncedLyrics);
-    }
-
-    function formatTime(ms: number): string {
-        const seconds = Math.floor(ms / 1000);
-        const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = seconds % 60;
-        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
     }
 
     async function updateCurrentTrack() {
@@ -141,6 +137,10 @@
         }
     }
 
+    function toggleDisplayMode(mode: 'multiline' | 'singleline') {
+        displayMode = mode;
+    }
+
     onMount(async () => {
         if (!isSpotifyAuthenticated()) {
             goto('/');
@@ -167,38 +167,38 @@
     });
 </script>
 
-<div class="h-screen w-screen relative" style="background-color: {accentColor}; color: {textColor};">
-    <div class="absolute inset-x-0 top-0 h-16 w-full flex items-center px-4 bg-opacity-50 bg-gray-800">
-        {#if currentTrack}
-            <div class="flex items-center">
-                <img src={currentTrack.item.album.images[2].url} alt="Album cover" class="w-12 h-12 mr-4">
-                <div>
-                    <p class="font-bold">{currentTrack.item.name}</p>
-                    <p class="text-sm">{currentTrack.item.artists.map(a => a.name).join(', ')}</p>
-                </div>
-            </div>
-            <div class="ml-auto">
-                {formatTime(currentTime)} / {formatTime(currentTrack.item.duration_ms)}
-            </div>
-        {:else}
-            <p>No track currently playing</p>
-        {/if}
-    </div>
+<div class="h-screen w-screen relative bg-opacity-50 bg-gray-800" style="background-color: {accentColor}; color: {textColor};">
+   <Miniplayer 
+  currentTrack={currentTrack} 
+  currentTime={currentTime}
+  displayMode={displayMode}
+        on:toggle-display-mode={(event) => toggleDisplayMode(event.detail)}
+    />
     <div class="flex flex-col items-center justify-center h-full">
         {#if currentTrack && $syncedLyrics}
-            <ScrollArea 
-                class="h-full w-full mt-14 px-10 !font-sans" 
-                bind:this={scrollContainer}
-                on:mouseenter={handleUserInteraction}
-                on:touchstart={handleUserInteraction}
-                on:wheel={handleUserInteraction}
-            >
-                {#each parsedLyrics as lyric, i}
-                    <p class={`text-center my-12 text-4xl font-clashDisplayMedium ${lyric === $currentLine ? 'font-semibold current-line' : ''}`}>
-                        {lyric.text}
+        
+
+            {#if displayMode === 'multiline'}
+                <ScrollArea 
+                    class="h-full w-full mt-16 px-10 !font-sans transition-all duration-300" 
+                    bind:this={scrollContainer}
+                    on:mouseenter={handleUserInteraction}
+                    on:touchstart={handleUserInteraction}
+                    on:wheel={handleUserInteraction}
+                >
+                    {#each parsedLyrics as lyric, i}
+                        <p class={`text-center my-12 text-4xl font-clashDisplayMedium transition-opacity duration-300 ${lyric === $currentLine ? 'font-semibold current-line opacity-100' : 'opacity-50'}`}>
+                            {lyric.text}
+                        </p>
+                    {/each}
+                </ScrollArea>
+            {:else}
+                <div class="flex items-center justify-center h-full">
+                    <p class="text-center text-6xl font-clashDisplayMedium">
+                        {$currentLine ? $currentLine.text : 'Waiting for lyrics...'}
                     </p>
-                {/each}
-            </ScrollArea>
+                </div>
+            {/if}
         {:else if currentTrack}
             <p class="text-2xl">No lyrics found</p>
         {:else}
